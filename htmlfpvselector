@@ -1,0 +1,1326 @@
+<antArtifact identifier="drone-motor-prop-calculator" type="text/html" language="" title="Drone Motor & Prop Selection Calculator">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Motor & Prop Selection Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            margin-top: 1rem;
+        }
+        .controls {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.5rem;
+        }
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        select, input {
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-bottom: 0.25rem;
+        }
+        input[type="number"] {
+            width: 80px;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: bold;
+        }
+        .results-container {
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .s-header {
+            background-color: #e6f0ff;
+        }
+        .prop-header {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .category-header {
+            background-color: #eee;
+            font-style: italic;
+            text-align: left;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .legend-item {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .notes {
+            font-size: 0.8rem;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .notes ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 8px 16px;
+            background-color: #f1f1f1;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 2px;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+        }
+        .tab-content {
+            display: none;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .data-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+        .data-card h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        .data-label {
+            font-weight: bold;
+        }
+        .recommendation {
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        .good-match {
+            background-color: #d4edda;
+        }
+        .average-match {
+            background-color: #fff3cd;
+        }
+        .poor-match {
+            background-color: #f8d7da;
+        }
+        /* Mach color classes */
+        .mach-0 { background-color: #e8f5e9; } /* < 0.4 */
+        .mach-1 { background-color: #c8e6c9; } /* 0.4-0.5 */
+        .mach-2 { background-color: #fff9c4; } /* 0.5-0.6 */
+        .mach-3 { background-color: #ffecb3; } /* 0.6-0.7 */
+        .mach-4 { background-color: #ffcc80; color: white; } /* 0.7-0.8 */
+        .mach-5 { background-color: #ef5350; color: white; } /* 0.8-0.9 */
+        .mach-6 { background-color: #c62828; color: white; } /* ≥ 0.9 */
+        
+        /* Current draw color classes */
+        .amps-0 { background-color: #e3f2fd; } /* Very low */
+        .amps-1 { background-color: #bbdefb; } /* Low */
+        .amps-2 { background-color: #90caf9; } /* Moderate */
+        .amps-3 { background-color: #64b5f6; } /* Medium */
+        .amps-4 { background-color: #42a5f5; color: white; } /* High */
+        .amps-5 { background-color: #2196f3; color: white; } /* Very high */
+        .amps-6 { background-color: #1976d2; color: white; } /* Extreme */
+        
+        /* Button styles */
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Share info */
+        .share-info {
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .data-row {
+                flex-direction: column;
+            }
+            
+            .control-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Ultimate Drone Motor & Prop Calculator</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="openTab('calculator')">Calculator</div>
+        <div class="tab" onclick="openTab('reference')">Reference Tables</div>
+        <div class="tab" onclick="openTab('about')">About</div>
+    </div>
+    
+    <div id="calculator" class="tab-content active">
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-row">
+                    <div>
+                        <label for="aircraftType">Aircraft Type:</label>
+                        <select id="aircraftType">
+                            <option value="tinywhoop">Tiny Whoop</option>
+                            <option value="toothpick">Toothpick</option>
+                            <option value="micro">Micro Drone (2-3")</option>
+                            <option value="miniquad">Mini Quad (3-4")</option>
+                            <option value="freestyle" selected>Freestyle (5")</option>
+                            <option value="cinewhoop">Cinewhoop</option>
+                            <option value="bnf">BNF-Style</option>
+                            <option value="longrange">Long Range</option>
+                            <option value="cinelift">Cinelift</option>
+                            <option value="xlift">X-Class</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="allUpWeight">All-Up Weight (g):</label>
+                        <input type="number" id="allUpWeight" value="500" min="10" max="10000">
+                    </div>
+                    <div>
+                        <label for="flightTime">Target Flight Time (min):</label>
+                        <input type="number" id="flightTime" value="5" min="1" max="60">
+                    </div>
+                </div>
+                
+                <div class="control-row">
+                    <div>
+                        <label for="sCells">Battery (S Count):</label>
+                        <select id="sCells">
+                            <option value="1">1S</option>
+                            <option value="2">2S</option>
+                            <option value="3">3S</option>
+                            <option value="4" selected>4S</option>
+                            <option value="5">5S</option>
+                            <option value="6">6S</option>
+                            <option value="8">8S</option>
+                            <option value="10">10S</option>
+                            <option value="12">12S</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="batteryCapacity">Battery Capacity (mAh):</label>
+                        <input type="number" id="batteryCapacity" value="1300" min="100" max="10000">
+                    </div>
+                    <div>
+                        <label for="propPitch">Prop Pitch (inches):</label>
+                        <input type="number" id="propPitch" value="4.5" min="1" max="10" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-row">
+                    <div>
+                        <label for="propDiameter">Prop Diameter:</label>
+                        <select id="propDiameter">
+                            <option value="0.31">31mm (0.31")</option>
+                            <option value="0.4">40mm (0.4")</option>
+                            <option value="0.5">50mm (0.5")</option>
+                            <option value="0.65">65mm (0.65")</option>
+                            <option value="0.75">75mm (0.75")</option>
+                            <option value="1">1"</option>
+                            <option value="1.2">1.2"</option>
+                            <option value="1.5">1.5"</option>
+                            <option value="2">2"</option>
+                            <option value="2.5">2.5"</option>
+                            <option value="3">3"</option>
+                            <option value="3.5">3.5"</option>
+                            <option value="4">4"</option>
+                            <option value="5" selected>5"</option>
+                            <option value="6">6"</option>
+                            <option value="7">7"</option>
+                            <option value="8">8"</option>
+                            <option value="9">9"</option>
+                            <option value="10">10"</option>
+                            <option value="11">11"</option>
+                            <option value="12">12"</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="motorKv">Motor KV:</label>
+                        <select id="motorKv">
+                            <option value="800">800KV</option>
+                            <option value="1000">1000KV</option>
+                            <option value="1200">1200KV</option>
+                            <option value="1400">1400KV</option>
+                            <option value="1600">1600KV</option>
+                            <option value="1800">1800KV</option>
+                            <option value="2000">2000KV</option>
+                            <option value="2300" selected>2300KV</option>
+                            <option value="2600">2600KV</option>
+                            <option value="3000">3000KV</option>
+                            <option value="5000">5000KV</option>
+                            <option value="7000">7000KV</option>
+                            <option value="10000">10000KV</option>
+                            <option value="15000">15000KV</option>
+                            <option value="20000">20000KV</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button id="calculateButton" onclick="calculateResults()">Calculate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsSection">
+            <h2>Results</h2>
+            <div class="data-card">
+                <h3>Performance Metrics</h3>
+                <div class="data-row">
+                    <span class="data-label">Prop Tip Speed:</span>
+                    <span id="propTipSpeed">Calculating...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Mach Number:</span>
+                    <span id="machNumber">Calculating...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Current Draw (100% throttle):</span>
+                    <span id="currentDraw">Calculating...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Power Output:</span>
+                    <span id="powerOutput">Calculating...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Thrust Estimate:</span>
+                    <span id="thrustEstimate">Calculating...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Thrust-to-Weight Ratio:</span>
+                    <span id="thrustToWeight">Calculating...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Estimated Flight Time:</span>
+                    <span id="estFlightTime">Calculating...</span>
+                </div>
+            </div>
+            
+            <div class="data-card">
+                <h3>Motor Size Recommendations</h3>
+                <div id="motorRecommendations">Calculating...</div>
+            </div>
+            
+            <div class="data-card">
+                <h3>ESC Recommendations</h3>
+                <div id="escRecommendations">Calculating...</div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3>Mach Number Legend:</h3>
+            <div class="legend-item mach-0">< 0.4 Mach (Safe)</div>
+            <div class="legend-item mach-1">0.4-0.5 Mach</div>
+            <div class="legend-item mach-2">0.5-0.6 Mach</div>
+            <div class="legend-item mach-3">0.6-0.7 Mach</div>
+            <div class="legend-item mach-4">0.7-0.8 Mach</div>
+            <div class="legend-item mach-5">0.8-0.9 Mach</div>
+            <div class="legend-item mach-6">≥ 0.9 Mach (Danger)</div>
+        </div>
+        
+        <div class="legend">
+            <h3>Current Draw Legend:</h3>
+            <div class="legend-item amps-0">< 5A (Very Low)</div>
+            <div class="legend-item amps-1">5-10A (Low)</div>
+            <div class="legend-item amps-2">10-20A (Moderate)</div>
+            <div class="legend-item amps-3">20-30A (Medium)</div>
+            <div class="legend-item amps-4">30-40A (High)</div>
+            <div class="legend-item amps-5">40-60A (Very High)</div>
+            <div class="legend-item amps-6">> 60A (Extreme)</div>
+        </div>
+    </div>
+    
+    <div id="reference" class="tab-content">
+        <h2>Reference Tables</h2>
+        
+        <h3>Standard Motor Sizes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Motor Size</th>
+                    <th>Stator Diameter</th>
+                    <th>Stator Height</th>
+                    <th>Typical Applications</th>
+                    <th>Prop Sizes</th>
+                    <th>Weight Range</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>0603</td>
+                    <td>6mm</td>
+                    <td>3mm</td>
+                    <td>Micro Whoop</td>
+                    <td>31mm-40mm</td>
+                    <td>10-20g</td>
+                </tr>
+                <tr>
+                    <td>0802</td>
+                    <td>8mm</td>
+                    <td>2mm</td>
+                    <td>Tiny Whoop</td>
+                    <td>40mm-65mm</td>
+                    <td>20-35g</td>
+                </tr>
+                <tr>
+                    <td>1102</td>
+                    <td>11mm</td>
+                    <td>2mm</td>
+                    <td>Micro Drones</td>
+                    <td>65mm-2"</td>
+                    <td>30-60g</td>
+                </tr>
+                <tr>
+                    <td>1103</td>
+                    <td>11mm</td>
+                    <td>3mm</td>
+                    <td>Micro Drones</td>
+                    <td>65mm-2"</td>
+                    <td>35-70g</td>
+                </tr>
+                <tr>
+                    <td>1105</td>
+                    <td>11mm</td>
+                    <td>5mm</td>
+                    <td>Toothpick</td>
+                    <td>2"-2.5"</td>
+                    <td>50-100g</td>
+                </tr>
+                <tr>
+                    <td>1204</td>
+                    <td>12mm</td>
+                    <td>4mm</td>
+                    <td>Toothpick</td>
+                    <td>2.5"-3"</td>
+                    <td>60-120g</td>
+                </tr>
+                <tr>
+                    <td>1306</td>
+                    <td>13mm</td>
+                    <td>6mm</td>
+                    <td>3" Micros</td>
+                    <td>2.5"-3"</td>
+                    <td>80-150g</td>
+                </tr>
+                <tr>
+                    <td>1407</td>
+                    <td>14mm</td>
+                    <td>7mm</td>
+                    <td>3" Racing</td>
+                    <td>3"-3.5"</td>
+                    <td>100-200g</td>
+                </tr>
+                <tr>
+                    <td>1507</td>
+                    <td>15mm</td>
+                    <td>7mm</td>
+                    <td>3"-4" Racing</td>
+                    <td>3"-4"</td>
+                    <td>120-250g</td>
+                </tr>
+                <tr>
+                    <td>1806</td>
+                    <td>18mm</td>
+                    <td>6mm</td>
+                    <td>4" Lightweight</td>
+                    <td>3.5"-4.5"</td>
+                    <td>150-300g</td>
+                </tr>
+                <tr>
+                    <td>2204</td>
+                    <td>22mm</td>
+                    <td>4mm</td>
+                    <td>5" Racing</td>
+                    <td>4"-5"</td>
+                    <td>250-400g</td>
+                </tr>
+                <tr>
+                    <td>2205</td>
+                    <td>22mm</td>
+                    <td>5mm</td>
+                    <td>5" Racing</td>
+                    <td>4"-5"</td>
+                    <td>250-450g</td>
+                </tr>
+                <tr>
+                    <td>2206</td>
+                    <td>22mm</td>
+                    <td>6mm</td>
+                    <td>5" Freestyle</td>
+                    <td>5"</td>
+                    <td>400-550g</td>
+                </tr>
+                <tr>
+                    <td>2207</td>
+                    <td>22mm</td>
+                    <td>7mm</td>
+                    <td>5" Freestyle</td>
+                    <td>5"</td>
+                    <td>450-600g</td>
+                </tr>
+                <tr>
+                    <td>2306</td>
+                    <td>23mm</td>
+                    <td>6mm</td>
+                    <td>5" Freestyle</td>
+                    <td>5"</td>
+                    <td>450-600g</td>
+                </tr>
+                <tr>
+                    <td>2307</td>
+                    <td>23mm</td>
+                    <td>7mm</td>
+                    <td>5" Freestyle/HD</td>
+                    <td>5"-5.5"</td>
+                    <td>500-650g</td>
+                </tr>
+                <tr>
+                    <td>2407</td>
+                    <td>24mm</td>
+                    <td>7mm</td>
+                    <td>5" Heavy Freestyle</td>
+                    <td>5"-6"</td>
+                    <td>550-700g</td>
+                </tr>
+                <tr>
+                    <td>2506</td>
+                    <td>25mm</td>
+                    <td>6mm</td>
+                    <td>6" Freestyle</td>
+                    <td>5"-6"</td>
+                    <td>600-750g</td>
+                </tr>
+                <tr>
+                    <td>2807</td>
+                    <td>28mm</td>
+                    <td>7mm</td>
+                    <td>Long Range/LR HD</td>
+                    <td>6"-7"</td>
+                    <td>700-900g</td>
+                </tr>
+                <tr>
+                    <td>3007</td>
+                    <td>30mm</td>
+                    <td>7mm</td>
+                    <td>7" Long Range</td>
+                    <td>7"-8"</td>
+                    <td>800-1100g</td>
+                </tr>
+                <tr>
+                    <td>3508</td>
+                    <td>35mm</td>
+                    <td>8mm</td>
+                    <td>7"-8" Cinelift</td>
+                    <td>8"-10"</td>
+                    <td>900-1500g</td>
+                </tr>
+                <tr>
+                    <td>4008</td>
+                    <td>40mm</td>
+                    <td>8mm</td>
+                    <td>X-Class</td>
+                    <td>10"-12"</td>
+                    <td>1500-2500g</td>
+                </tr>
+                <tr>
+                    <td>5008</td>
+                    <td>50mm</td>
+                    <td>8mm</td>
+                    <td>Heavy Lift</td>
+                    <td>12"-14"</td>
+                    <td>2000-5000g</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>KV Ratings by Application</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Application</th>
+                    <th>1S</th>
+                    <th>2S</th>
+                    <th>3S</th>
+                    <th>4S</th>
+                    <th>5S</th>
+                    <th>6S</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Micro Whoop (40mm)</td>
+                    <td>14000-20000</td>
+                    <td>7000-11000</td>
+                    <td>5000-7000</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>Tiny Whoop (65mm)</td>
+                    <td>12000-16000</td>
+                    <td>6000-8000</td>
+                    <td>4000-5000</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>2" Toothpick</td>
+                    <td>7000-10000</td>
+                    <td>4000-6000</td>
+                    <td>2500-4000</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>3" Micro</td>
+                    <td>5000-7000</td>
+                    <td>3500-5000</td>
+                    <td>2200-3500</td>
+                    <td>1800-2800</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>3" Racing</td>
+                    <td>—</td>
+                    <td>4500-6000</td>
+                    <td>3000-4000</td>
+                    <td>2200-3000</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>4" Racing</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>3000-3800</td>
+                    <td>2300-3000</td>
+                    <td>1900-2400</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>5" Racing</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>2800-3500</td>
+                    <td>2200-2800</td>
+                    <td>1800-2400</td>
+                    <td>1600-2000</td>
+                </tr>
+                <tr>
+                    <td>5" Freestyle</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>2600-3200</td>
+                    <td>1900-2600</td>
+                    <td>1700-2100</td>
+                    <td>1500-1900</td>
+                </tr>
+                <tr>
+                    <td>6" Long Range</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>1700-2000</td>
+                    <td>1400-1800</td>
+                    <td>1300-1650</td>
+                </tr>
+                <tr>
+                    <td>7" Long Range</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>1300-1700</td>
+                    <td>1100-1500</td>
+                    <td>900-1300</td>
+                </tr>
+                <tr>
+                    <td>7-8" Cinelift</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>1000-1400</td>
+                    <td>800-1200</td>
+                    <td>700-1000</td>
+                </tr>
+                <tr>
+                    <td>10-12" Heavy Lift</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>800-1000</td>
+                    <td>650-900</td>
+                    <td>550-800</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>Battery C-Rating Requirements</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Application</th>
+                    <th>Minimum C-Rating</th>
+                    <th>Ideal C-Rating</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Micro Whoop</td>
+                    <td>25C</td>
+                    <td>45C+</td>
+                    <td>Small batteries heat up quickly</td>
+                </tr>
+                <tr>
+                    <td>Toothpick/Micro</td>
+                    <td>30C</td>
+                    <td>75C+</td>
+                    <td>High performance on small batteries</td>
+                </tr>
+                <tr>
+                    <td>3" Racing</td>
+                    <td>75C</td>
+                    <td>95C+</td>
+                    <td>High burst current needs</td>
+                </tr>
+                <tr>
+                    <td>5" Racing</td>
+                    <td>95C</td>
+                    <td>120C+</td>
+                    <td>Maximum burst current</td>
+                </tr>
+                <tr>
+                    <td>5" Freestyle</td>
+                    <td>75C</td>
+                    <td>95C+</td>
+                    <td>Balance of performance and flight time</td>
+                </tr>
+                <tr>
+                    <td>Long Range</td>
+                    <td>45C</td>
+                    <td>75C+</td>
+                    <td>Efficiency focused</td>
+                </tr>
+                <tr>
+                    <td>Cinelift/Heavy</td>
+                    <td>30C</td>
+                    <td>45C+</td>
+                    <td>Sustained current more important than burst</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="about" class="tab-content">
+        <h2>About This Calculator</h2>
+        <p>This calculator provides comprehensive information to help you select the right motor and propeller combination for your RC aircraft or drone. It calculates important metrics like:</p>
+        <ul>
+            <li>Propeller tip speed and Mach number</li>
+            <li>Current draw at full throttle</li>
+            <li>Estimated thrust production</li>
+            <li>Thrust-to-weight ratio</li>
+            <li>Recommended motor sizes based on your inputs</li>
+            <li>ESC requirements</li>
+        </ul>
+        
+        <h3>How to Use</h3>
+        <ol>
+            <li>Select your aircraft type</li>
+            <li>Enter the all-up weight (total weight including battery)</li>
+            <li>Set your target flight time</li>
+            <li>Select battery configuration (S count and capacity)</li>
+            <li>Choose propeller diameter and pitch</li>
+            <li>Select motor KV rating</li>
+            <li>Click "Calculate" to see the results</li>
+        </ol>
+        
+        <h3>Calculation Notes</h3>
+        <ul>
+            <li>Mach calculations assume sea level air density (59°F/15°C)</li>
+            <li>Current calculations are estimates based on empirical models for typical brushless motors</li>
+            <li>Thrust estimates are approximations based on typical propeller efficiency</li>
+            <li>7% battery sag is factored into all calculations</li>
+            <li>All calculations assume a properly tuned system with minimal losses</li>
+        </ul>
+        
+        <h3>Share This Calculator</h3>
+        <p>To share this calculator with others:</p>
+        <ol>
+            <li>Save this HTML file to your device</li>
+            <li>Upload it to a file hosting service like Google Drive</li>
+            <li>Set the sharing permissions to "Anyone with the link"</li>
+            <li>Share the link with others (they will need to download the file to use it)</li>
+        </ol>
+        <p>For a better sharing experience, consider uploading it to a web hosting service or using a code sharing platform like CodePen, JSFiddle, or GitHub Pages.</p>
+        
+        <div class="share-info">
+            <p><strong>Want to improve this calculator?</strong> The code is open and can be modified to suit your needs. Feel free to customize it or add your own features!</p>
+        </div>
+    </div>
+    
+    <div class="notes">
+        <strong>Important Notes:</strong>
+        <ul>
+            <li>All calculations are estimates and should be used as a general guide only</li>
+            <li>Always test new setups carefully, starting at low throttle</li>
+            <li>Higher Mach numbers (>0.7) lead to reduced efficiency and increased noise</li>
+            <li>Motor and ESC temperatures should be monitored when testing new setups</li>
+            <li>Battery selection should match the current requirements of your motor/prop combo</li>
+        </ul>
+    </div>
+
+    <script>
+        // Constants
+        const SPEED_OF_SOUND_MPH = 761.2; // Speed of sound in mph at sea level (59°F)
+        const CELL_VOLTAGE_CHARGED = 4.2; // Fully charged LiPo cell voltage
+        const BATTERY_SAG = 0.07; // 7% battery sag
+        const G_TO_LBS = 0.00220462; // Conversion from grams to pounds
+        
+        // Open tab function
+        function openTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Remove active class from all tabs
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Activate the selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Find and activate the tab button
+            const tabButtons = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabButtons.length; i++) {
+                if (tabButtons[i].textContent.toLowerCase().includes(tabName.toLowerCase())) {
+                    tabButtons[i].classList.add('active');
+                }
+            }
+        }
+        
+        // Calculate voltage with sag
+        function getVoltageWithSag(sCells) {
+            return sCells * CELL_VOLTAGE_CHARGED * (1 - BATTERY_SAG);
+        }
+        
+        // Calculate motor RPM
+        function calculateRPM(kv, sCells) {
+            const voltage = getVoltageWithSag(sCells);
+            return kv * voltage;
+        }
+        
+        // Calculate propeller tip speed in mph
+        function calculateTipSpeedMPH(rpm, diameterInches) {
+            const circumferenceInches = Math.PI * diameterInches;
+            const tipSpeedInchesPerMinute = rpm * circumferenceInches;
+            return tipSpeedInchesPerMinute * 60 / 63360; // Convert to mph
+        }
+        
+        // Calculate Mach number
+        function calculateMach(tipSpeedMPH) {
+            return tipSpeedMPH / SPEED_OF_SOUND_MPH;
+        }
+        
+        // Get class name based on Mach number
+        function getMachClass(mach) {
+            if (mach >= 0.9) return 'mach-6';
+            if (mach >= 0.8) return 'mach-5';
+            if (mach >= 0.7) return 'mach-4';
+            if (mach >= 0.6) return 'mach-3';
+            if (mach >= 0.5) return 'mach-2';
+            if (mach >= 0.4) return 'mach-1';
+            return 'mach-0';
+        }
+        
+        // Get text description based on Mach number
+        function getMachDescription(mach) {
+            if (mach >= 0.9) return 'Danger - Extremely inefficient, loud, and potentially damaging';
+            if (mach >= 0.8) return 'Very high - Performance degradation, very loud';
+            if (mach >= 0.7) return 'High - Reduced efficiency, noticeable noise increase';
+            if (mach >= 0.6) return 'Moderate-high - Some efficiency loss';
+            if (mach >= 0.5) return 'Moderate - Good balance of performance';
+            if (mach >= 0.4) return 'Good - Efficient operation';
+            return 'Optimal - Maximum efficiency';
+        }
+        
+        // Get class name based on current draw
+        function getCurrentClass(amps) {
+            if (amps >= 60) return 'amps-6';
+            if (amps >= 40) return 'amps-5';
+            if (amps >= 30) return 'amps-4';
+            if (amps >= 20) return 'amps-3';
+            if (amps >= 10) return 'amps-2';
+            if (amps >= 5) return 'amps-1';
+            return 'amps-0';
+        }
+        
+        // Calculate current draw (empirical formula)
+        function calculateCurrentDraw(kv, volts, diameter, pitch, efficiency = 0.75) {
+            // This is an approximation formula based on empirical data
+            // Current (A) ≈ (KV * Voltage * Diameter^2 * Pitch) / Constant
+            // The constant varies based on prop size and motor efficiency
+            let constant = 5000000; // Base constant
+            
+            // Adjust constant based on prop size
+            if (diameter < 1) constant = 15000000; // Micro props are more efficient per size
+            else if (diameter < 3) constant = 10000000;
+            else if (diameter < 5) constant = 7500000;
+            else if (diameter > 8) constant = 4000000; // Larger props may need more current
+            
+            // Adjust for motor efficiency (higher quality motors are more efficient)
+            constant *= efficiency;
+            
+            // Calculate current
+            let current = (kv * volts * Math.pow(diameter, 2) * pitch) / constant;
+            
+            // Apply realistic constraints
+            if (current < 1) current = 1;
+            
+            return current;
+        }
+        
+        // Calculate thrust (empirical formula)
+        function calculateThrust(rpm, diameter, pitch, airDensity = 1.225) {
+            // Simplified thrust calculation based on disk actuator theory with empirical adjustments
+            // T = C_T * ρ * n^2 * D^4
+            // where C_T is thrust coefficient, ρ is air density, n is rotations per second, D is diameter
+            
+            // Convert RPM to rotations per second
+            const rps = rpm / 60;
+            
+            // Empirical thrust coefficient (varies by prop design)
+            let thrustCoefficient = 0.09;
+            
+            // Adjust coefficient based on prop diameter and pitch
+            if (diameter < 1) thrustCoefficient = 0.07; // Micro props less efficient
+            else if (diameter > 8) thrustCoefficient = 0.11; // Larger props more efficient
+            
+            // Pitch affects efficiency
+            const pitchRatio = pitch / diameter;
+            if (pitchRatio > 0.8) thrustCoefficient *= 0.9; // High pitch props lose some efficiency
+            else if (pitchRatio < 0.5) thrustCoefficient *= 0.95; // Low pitch props slightly less efficient
+            
+            // Calculate thrust in Newtons
+            const thrustN = thrustCoefficient * airDensity * Math.pow(rps, 2) * Math.pow(diameter * 0.0254, 4);
+            
+            // Convert to grams-force (approximate)
+            return thrustN * 101.97;
+        }
+        
+        // Get recommended motor size based on prop diameter, weight, and application
+        function getRecommendedMotorSizes(propDiameter, weight, aircraftType) {
+            // Define motor size recommendations
+            const recommendations = [];
+            
+            // Motor size recommendations based on prop diameter and aircraft weight
+            // Returns array of objects with motor size, suitability rating, and notes
+            
+            if (propDiameter <= 0.5) { // Micro whoop sizes
+                recommendations.push({ size: "0603", suitability: "good", notes: "Standard for micro whoops" });
+                recommendations.push({ size: "0703", suitability: "good", notes: "More power for micro whoops" });
+                recommendations.push({ size: "0802", suitability: "average", notes: "May be too heavy for <0.5\" props" });
+            } 
+            else if (propDiameter <= 0.75) { // Tiny whoop sizes
+                recommendations.push({ size: "0802", suitability: "good", notes: "Standard for tiny whoops" });
+                recommendations.push({ size: "0803", suitability: "good", notes: "More power for tiny whoops" });
+                recommendations.push({ size: "1102", suitability: "average", notes: "Only for heavier builds" });
+            }
+            else if (propDiameter <= 1.5) { // 65mm to 1.5"
+                recommendations.push({ size: "0802", suitability: weight < 50 ? "good" : "average", notes: "Good for lightweight builds" });
+                recommendations.push({ size: "1102", suitability: "good", notes: "Standard for 65mm-1.5\" props" });
+                recommendations.push({ size: "1103", suitability: "good", notes: "More power for 65mm-1.5\" props" });
+            }
+            else if (propDiameter <= 2.5) { // 2-2.5"
+                recommendations.push({ size: "1103", suitability: weight < 80 ? "good" : "average", notes: "Good for lightweight builds" });
+                recommendations.push({ size: "1105", suitability: "good", notes: "Standard for toothpick class" });
+                recommendations.push({ size: "1204", suitability: "good", notes: "Good balance of power and weight" });
+                recommendations.push({ size: "1306", suitability: weight > 100 ? "good" : "average", notes: "Better for heavier builds" });
+            }
+            else if (propDiameter <= 3.5) { // 3-3.5"
+                recommendations.push({ size: "1306", suitability: weight < 150 ? "good" : "average", notes: "Good for lightweight 3\" builds" });
+                recommendations.push({ size: "1407", suitability: "good", notes: "Standard for 3\" racing/freestyle" });
+                recommendations.push({ size: "1507", suitability: "good", notes: "More power for 3\"-3.5\" props" });
+                recommendations.push({ size: "1606", suitability: weight > 200 ? "good" : "average", notes: "Better for heavier builds" });
+            }
+            else if (propDiameter <= 4.5) { // 4-4.5"
+                recommendations.push({ size: "1507", suitability: weight < 250 ? "good" : "average", notes: "Good for lightweight 4\" builds" });
+                recommendations.push({ size: "1806", suitability: "good", notes: "Standard for 4\" builds" });
+                recommendations.push({ size: "2004", suitability: "good", notes: "Good balance for 4\" racing" });
+                recommendations.push({ size: "2204", suitability: "good", notes: "More power for 4\" props" });
+            }
+            else if (propDiameter <= 5.5) { // 5-5.5"
+                recommendations.push({ size: "2204", suitability: weight < 450 ? "good" : "average", notes: "Lightweight racing setup" });
+                recommendations.push({ size: "2205", suitability: "good", notes: "Standard for 5\" racing" });
+                recommendations.push({ size: "2206", suitability: "good", notes: "Good all-around for 5\" freestyle" });
+                recommendations.push({ size: "2207", suitability: "good", notes: "More power for 5\" freestyle" });
+                recommendations.push({ size: "2306", suitability: "good", notes: "Good power-to-weight for 5\"" });
+                recommendations.push({ size: "2307", suitability: weight > 500 ? "good" : "average", notes: "Better for heavier 5\" builds" });
+                recommendations.push({ size: "2407", suitability: weight > 550 ? "good" : "average", notes: "For heavy 5\" builds with HD cameras" });
+            }
+            else if (propDiameter <= 6.5) { // 6-6.5"
+                recommendations.push({ size: "2306", suitability: weight < 600 ? "good" : "average", notes: "Lightweight 6\" setup" });
+                recommendations.push({ size: "2407", suitability: "good", notes: "Good all-around for 6\" props" });
+                recommendations.push({ size: "2506", suitability: "good", notes: "Standard for 6\" freestyle/LR" });
+                recommendations.push({ size: "2507", suitability: "good", notes: "More power for 6\" props" });
+                recommendations.push({ size: "2807", suitability: weight > 700 ? "good" : "average", notes: "For heavier 6\" builds" });
+            }
+            else if (propDiameter <= 8) { // 7-8"
+                recommendations.push({ size: "2507", suitability: weight < 800 ? "good" : "average", notes: "Lightweight 7\" setup" });
+                recommendations.push({ size: "2807", suitability: "good", notes: "Standard for 7\" long range" });
+                recommendations.push({ size: "3007", suitability: "good", notes: "Good for 7\"-8\" props" });
+                recommendations.push({ size: "3107", suitability: weight > 900 ? "good" : "average", notes: "For heavier 7\"-8\" builds" });
+                recommendations.push({ size: "3508", suitability: weight > 1000 ? "good" : "average", notes: "For cinelift with 7\"-8\" props" });
+            }
+            else if (propDiameter <= 10) { // 9-10"
+                recommendations.push({ size: "3107", suitability: weight < 1200 ? "good" : "average", notes: "Lightweight 9\"-10\" setup" });
+                recommendations.push({ size: "3508", suitability: "good", notes: "Standard for 9\"-10\" props" });
+                recommendations.push({ size: "4008", suitability: weight > 1500 ? "good" : "average", notes: "For heavier 9\"-10\" builds" });
+            }
+            else { // 11-12"
+                recommendations.push({ size: "3508", suitability: weight < 1800 ? "good" : "average", notes: "Lighter 11\"-12\" setup" });
+                recommendations.push({ size: "4008", suitability: "good", notes: "Standard for 11\"-12\" props" });
+                recommendations.push({ size: "4108", suitability: "good", notes: "More power for 11\"-12\" props" });
+                recommendations.push({ size: "5008", suitability: weight > 2500 ? "good" : "average", notes: "For heavy lift applications" });
+            }
+            
+            // Adjust recommendations based on aircraft type
+            if (aircraftType === "racing") {
+                // Prioritize lighter motors with good power
+                recommendations.forEach(rec => {
+                    if (rec.notes.includes("lightweight") || rec.notes.includes("racing")) {
+                        rec.suitability = "good";
+                    } else if (rec.notes.includes("heavy")) {
+                        rec.suitability = "poor";
+                    }
+                });
+            } else if (aircraftType === "longrange") {
+                // Prioritize efficiency
+                recommendations.forEach(rec => {
+                    if (rec.notes.includes("long range") || rec.notes.includes("LR")) {
+                        rec.suitability = "good";
+                    }
+                });
+            } else if (aircraftType === "cinelift" || aircraftType === "xlift") {
+                // Prioritize larger motors for sustained power
+                recommendations.forEach(rec => {
+                    if (rec.notes.includes("heavy") || rec.notes.includes("cinelift")) {
+                        rec.suitability = "good";
+                    } else if (rec.notes.includes("lightweight")) {
+                        rec.suitability = "poor";
+                    }
+                });
+            }
+            
+            return recommendations;
+        }
+        
+        // Get ESC recommendations based on motor KV, battery cells, and prop size
+        function getEscRecommendations(kv, sCells, propDiameter, estimatedCurrent) {
+            const recommendations = [];
+            
+            // Base ESC rating on estimated current with safety margin
+            const minEscRating = Math.ceil(estimatedCurrent * 1.3 / 5) * 5; // Round up to nearest 5A with 30% margin
+            
+            // Standard ESC ratings
+            const escRatings = [6, 12, 20, 30, 40, 50, 60, 70];
+            
+            // Find appropriate ESC ratings
+            const suitableRatings = escRatings.filter(rating => rating >= minEscRating);
+            
+            if (suitableRatings.length === 0) {
+                recommendations.push({ 
+                    rating: `${minEscRating}A+`, 
+                    suitability: "good",
+                    notes: `Very high current draw requires heavy-duty ESC rated for ${minEscRating}A continuous or higher`
+                });
+            } else {
+                // Recommend the lowest suitable rating and the next one up
+                recommendations.push({
+                    rating: `${suitableRatings[0]}A`,
+                    suitability: "good",
+                    notes: `Minimum recommended rating for this setup (${Math.round(estimatedCurrent)}A estimated draw)`
+                });
+                
+                if (suitableRatings.length > 1) {
+                    recommendations.push({
+                        rating: `${suitableRatings[1]}A`,
+                        suitability: "good",
+                        notes: "Provides additional headroom for safety and reliability"
+                    });
+                }
+            }
+            
+            // Add BLHeli_S vs BLHeli32 recommendations
+            if (sCells <= 3 && propDiameter <= 3 && estimatedCurrent < 20) {
+                recommendations.push({
+                    rating: "BLHeli_S",
+                    suitability: "good",
+                    notes: "Suitable for this low-power setup and more cost-effective"
+                });
+            } else if (sCells <= 4 && propDiameter <= 5 && estimatedCurrent < 35) {
+                recommendations.push({
+                    rating: "BLHeli_S",
+                    suitability: "average",
+                    notes: "Will work but BLHeli32 offers better performance"
+                });
+                recommendations.push({
+                    rating: "BLHeli32",
+                    suitability: "good",
+                    notes: "Better performance, features, and responsiveness"
+                });
+            } else {
+                recommendations.push({
+                    rating: "BLHeli32",
+                    suitability: "good",
+                    notes: "Required for high-performance setup with good throttle resolution"
+                });
+                
+                // For very high power setups
+                if (sCells >= 6 || estimatedCurrent > 50) {
+                    recommendations.push({
+                        rating: "BLHeli32 High-End",
+                        suitability: "good",
+                        notes: "High-end ESCs with better MOSFETs recommended for this high-power setup"
+                    });
+                }
+            }
+            
+            return recommendations;
+        }
+        
+        // Format recommendations as HTML
+        function formatRecommendations(recommendations) {
+            if (!recommendations || recommendations.length === 0) {
+                return "<p>No recommendations available for this configuration.</p>";
+            }
+            
+            let html = "";
+            
+            recommendations.forEach(rec => {
+                let colorClass = "good-match";
+                if (rec.suitability === "average") colorClass = "average-match";
+                if (rec.suitability === "poor") colorClass = "poor-match";
+                
+                html += `<div class="recommendation ${colorClass}">`;
+                html += `<strong>${rec.size || rec.rating}</strong>: ${rec.notes}`;
+                html += `</div>`;
+            });
+            
+            return html;
+        }
+        
+        // Calculate and update results
+        function calculateResults() {
+            // Get input values
+            const sCells = parseInt(document.getElementById('sCells').value);
+            const motorKv = parseInt(document.getElementById('motorKv').value);
+            const propDiameter = parseFloat(document.getElementById('propDiameter').value);
+            const propPitch = parseFloat(document.getElementById('propPitch').value);
+            const allUpWeight = parseInt(document.getElementById('allUpWeight').value);
+            const aircraftType = document.getElementById('aircraftType').value;
+            const batteryCapacity = parseInt(document.getElementById('batteryCapacity').value);
+            const targetFlightTime = parseInt(document.getElementById('flightTime').value);
+            
+            // Calculate voltage with sag
+            const voltage = getVoltageWithSag(sCells);
+            
+            // Calculate RPM
+            const rpm = calculateRPM(motorKv, sCells);
+            
+            // Calculate tip speed
+            const tipSpeedMPH = calculateTipSpeedMPH(rpm, propDiameter);
+            
+            // Calculate Mach number
+            const mach = calculateMach(tipSpeedMPH);
+            
+            // Calculate current draw
+            const currentDraw = calculateCurrentDraw(motorKv, voltage, propDiameter, propPitch);
+            
+            // Calculate power output
+            const powerWatts = voltage * currentDraw;
+            
+            // Calculate thrust
+            const thrustGrams = calculateThrust(rpm, propDiameter, propPitch);
+            
+            // Calculate thrust to weight ratio
+            const thrustToWeight = thrustGrams / allUpWeight;
+            
+            // Calculate estimated flight time
+            // This is a very rough estimate based on capacity and average current draw
+            // Assumes 80% usable capacity and average current at 50% of full throttle
+            const avgCurrentDraw = currentDraw * 0.5; // Assume 50% average throttle
+            const usableCapacityAh = batteryCapacity * 0.8 / 1000; // 80% usable capacity in Ah
+            const estFlightMinutes = (usableCapacityAh / avgCurrentDraw) * 60;
+            
+            // Update results
+            document.getElementById('propTipSpeed').textContent = `${Math.round(tipSpeedMPH)} mph (${Math.round(tipSpeedMPH * 1.60934)} km/h)`;
+            
+            const machElement = document.getElementById('machNumber');
+            machElement.textContent = `${mach.toFixed(2)} - ${getMachDescription(mach)}`;
+            machElement.className = getMachClass(mach);
+            
+            const currentElement = document.getElementById('currentDraw');
+            currentElement.textContent = `${Math.round(currentDraw)} A`;
+            currentElement.className = getCurrentClass(currentDraw);
+            
+            document.getElementById('powerOutput').textContent = `${Math.round(powerWatts)} W (${(powerWatts / 745.7).toFixed(2)} hp)`;
+            document.getElementById('thrustEstimate').textContent = `${Math.round(thrustGrams)}g (${(thrustGrams * G_TO_LBS).toFixed(2)} lbs)`;
+            document.getElementById('thrustToWeight').textContent = thrustToWeight.toFixed(2) + ":1";
+            
+            const flightTimeElement = document.getElementById('estFlightTime');
+            const actualVsTargetRatio = estFlightMinutes / targetFlightTime;
+            let flightTimeClass = '';
+            
+            if (actualVsTargetRatio >= 1.2) {
+                flightTimeClass = 'mach-0'; // Better than target
+            } else if (actualVsTargetRatio >= 0.9) {
+                flightTimeClass = 'mach-1'; // Close to target
+            } else if (actualVsTargetRatio >= 0.7) {
+                flightTimeClass = 'mach-2'; // Below target
+            } else if (actualVsTargetRatio >= 0.5) {
+                flightTimeClass = 'mach-3'; // Well below target
+            } else {
+                flightTimeClass = 'mach-6'; // Far below target
+            }
+            
+            flightTimeElement.textContent = `${estFlightMinutes.toFixed(1)} min (target: ${targetFlightTime} min)`;
+            flightTimeElement.className = flightTimeClass;
+            
+            // Update motor recommendations
+            const motorRecs = getRecommendedMotorSizes(propDiameter, allUpWeight, aircraftType);
+            document.getElementById('motorRecommendations').innerHTML = formatRecommendations(motorRecs);
+            
+            // Update ESC recommendations
+            const escRecs = getEscRecommendations(motorKv, sCells, propDiameter, currentDraw);
+            document.getElementById('escRecommendations').innerHTML = formatRecommendations(escRecs);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateResults();
+            
+            // Add event listeners to inputs
+            const inputs = document.querySelectorAll('select, input');
+            inputs.forEach(input => {
+                input.addEventListener('change', calculateResults);
+            });
+        });
+        
+        // Call initialization immediately
+        calculateResults();
+    </script>
+</body>
+</html>
+
+</antArtifact>
+
+Great! I've created the drone motor and prop selection calculator as an interactive artifact. This comprehensive tool includes:
+
+1. **Performance Calculator**
+   - Calculates Mach numbers, current draw, thrust, flight time, and more
+   - Color-coded results to easily identify optimal and problematic combinations
+   - Recommends appropriate motor sizes and ESC ratings based on your inputs
+
+2. **Reference Tables**
+   - Motor size guide with application recommendations
+   - KV ratings organized by aircraft type and battery configuration
+   - Battery C-rating requirements for different builds
+
+3. **Mobile-Friendly Design**
+   - Works well on both desktop and phone browsers
+   - Responsive interface with tabbed navigation
+   - Input filters for selecting exactly what you need
+
+To save this calculator:
+1. Click on the artifact above to open it
+2. Save the HTML file to your device
+3. You can then upload it to Google Drive and share the link with others
+
+This calculator should serve as a valuable reference tool for selecting components for FPV drones, RC planes, and other aircraft. Let me know if you need any help using it!​​​​​​​​​​​​​​​​
